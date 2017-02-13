@@ -34,6 +34,7 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 import customer.config.CloudantPropertiesBean;
 import customer.model.Customer;
+import customer.util.KeyProtectUtil;
 
 /**
  * REST Controller to manage Customer database
@@ -47,6 +48,9 @@ public class CustomerController {
     
     @Autowired
     private CloudantPropertiesBean cloudantProperties;
+    
+    @Autowired
+    private KeyProtectUtil keyProtect;
     
     @PostConstruct
     private void init() throws MalformedURLException {
@@ -112,6 +116,10 @@ public class CustomerController {
         			"{ \"selector\": { \"username\": \"" + username + "\" } }", 
         			Customer.class);
         	
+        	for (final Customer cust : customers) {
+				decryptPayload(cust);
+        	}
+        	
         	//  query index
             return  ResponseEntity.ok(customers);
             
@@ -140,6 +148,8 @@ public class CustomerController {
         	logger.info("caller: " + customerId);
 			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
             
+			decryptPayload(cust);
+			
             return ResponseEntity.ok(cust);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -168,11 +178,24 @@ public class CustomerController {
         	}
         	
 			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
+			decryptPayload(cust);
             
             return ResponseEntity.ok(cust);
         } catch (NoDocumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer with ID " + id + " not found");
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+    
+    
+    private void encryptPayload(Customer payload) throws Exception {
+		payload.setPassword(keyProtect.encrypt(payload.getKeyId(), payload.getIvId(), payload.getPassword()));
+    }
+     
+    private void decryptPayload(Customer payload) throws Exception {
+		payload.setPassword(keyProtect.decrypt(payload.getKeyId(), payload.getIvId(), payload.getPassword()));
     }
 
     /**
@@ -197,9 +220,14 @@ public class CustomerController {
                 return ResponseEntity.badRequest().body("Customer with name " + payload.getUsername() + " already exists");
 			}
 			
-			// TODO: hash password
-            //cust.setPassword(payload.getPassword());
- 
+			// generate keys to encrypt the password
+			final String keyId = keyProtect.createKey();
+			final String ivId = keyProtect.createKey();
+			
+			payload.setKeyId(keyId);
+			payload.setIvId(ivId);
+			
+			encryptPayload(payload);
             
             final Response resp = cloudant.save(payload);
             
@@ -246,8 +274,11 @@ public class CustomerController {
             cust.setLastName(payload.getLastName());
             cust.setImageUrl(payload.getImageUrl());
             
-            // TODO: hash password
-            cust.setPassword(payload.getPassword());
+            if (payload.getPassword() != null) {
+            	// encrypt password if it's passed in
+				cust.setPassword(payload.getPassword());
+				encryptPayload(cust);
+            }
             
             cloudant.save(payload);
         } catch (NoDocumentException e) {
@@ -273,6 +304,7 @@ public class CustomerController {
             final Database cloudant = getCloudantDatabase();
             final Customer cust = getCloudantDatabase().find(Customer.class, id);
             
+            // TODO: delete key
 
             cloudant.remove(cust);
         } catch (NoDocumentException e) {
