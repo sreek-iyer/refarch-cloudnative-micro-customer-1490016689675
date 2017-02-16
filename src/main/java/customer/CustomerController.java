@@ -273,6 +273,7 @@ public class CustomerController {
             cust.setFirstName(payload.getFirstName());
             cust.setLastName(payload.getLastName());
             cust.setImageUrl(payload.getImageUrl());
+            cust.setEmail(payload.getEmail());
             
             if (payload.getPassword() != null) {
             	// encrypt password if it's passed in
