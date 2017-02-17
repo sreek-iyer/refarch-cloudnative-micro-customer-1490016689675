@@ -10,7 +10,7 @@ RUN sed -i -e '/^password.*pam_unix.so/ s/$/ minlen=8/' /etc/pam.d/common-passwo
 
 # Install prereqs
 RUN apt-get update && apt-get install -y jq
-RUN apt-get upgrade -y
+RUN DEBIAN_FRONTEND=non-interactive apt-get upgrade -y
 
 # Copy agent files
 COPY agents/ /agents/
