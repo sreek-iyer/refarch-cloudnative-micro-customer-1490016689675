@@ -154,22 +154,41 @@ stages:
         cloudant_port=`echo ${cloudant_svc_creds} | ./jq '.port' | sed -e 's/"//g'`
         cloudant_username=`echo ${cloudant_svc_creds} | ./jq '.username' | sed -e 's/"//g'`
         cloudant_password=`echo ${cloudant_svc_creds} | ./jq '.password' | sed -e 's/"//g'`
-        
+
+        oauth_token=`echo ${CF_TOKEN} | sed -e 's/^Bearer //g'`
+
         # To view/fork this script goto: https://github.com/Osthanes/deployscripts
         # git_retry will retry git calls to prevent pipeline failure on temporary github problems
         # the code can be found in git_util.sh at https://github.com/Osthanes/container_deployer
         git_retry clone https://github.com/Osthanes/deployscripts.git deployscripts
         
         OPTIONAL_ARGS="${OPTIONAL_ARGS} \
-              -e NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY} \
-              -e eureka.client.fetchRegistry=true \
-              -e eureka.client.registerWithEureka=true \
-              -e "eureka.client.serviceUrl.defaultZone=${EUREKA_REGISTRY_URL}" \
               -e "spring.application.cloudant.username=${cloudant_username}" \
               -e "spring.application.cloudant.password=${cloudant_password}" \
               -e "spring.application.cloudant.host=${cloudant_host}" \
               -e "spring.application.cloudant.port=${cloudant_port}" \
-              -e "spring.application.cloudant.database=customers""
+              -e "spring.application.cloudant.database=customers" \
+              -e "spring.application.keyprotect.bluemix-space-guid=${CF_SPACE_ID}" \
+              -e "spring.application.keyprotect.bluemix-org-guid=${CF_ORGANIZATION_ID}" \
+              -e "spring.application.keyprotect.oauth-token=${oauth_token}""
+
+        if [ ! -z "${NEW_RELIC_LICENSE_KEY}" ]; then
+            OPTIONAL_ARGS="${OPTIONAL_ARGS} \
+              -e NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}"
+        fi
+
+        if [ ! -z "${EUREKA_REGISTRY_URL}" ]; then
+            OPTIONAL_ARGS="${OPTIONAL_ARGS} \
+              -e eureka.client.fetchRegistry=true \
+              -e eureka.client.registerWithEureka=true \
+              -e "eureka.client.serviceUrl.defaultZone=${EUREKA_REGISTRY_URL}""
+        else
+            OPTIONAL_ARGS="${OPTIONAL_ARGS} \
+              -e eureka.client.fetchRegistry=false \
+              -e eureka.client.registerWithEureka=false \
+              -e "eureka.client.serviceUrl.defaultZone=${EUREKA_REGISTRY_URL}""
+        fi
+
         
         # Deploy Container Group:
         # Optional environment properties (can be set directly in this script, or defined as environment properties):

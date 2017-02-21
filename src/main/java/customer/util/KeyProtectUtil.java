@@ -23,6 +23,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -33,6 +34,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
@@ -58,10 +60,9 @@ public class KeyProtectUtil {
 	@PostConstruct
 	private void init() {
 		logger.info("Using KeyProtect properties: " + keyProtectProperties);
-		
-		
 	}
 	
+	@Cacheable("keys")
 	private String getKey(String keyId) throws URISyntaxException, ClientProtocolException, IOException {
 		if (keyProtectProperties.getApiEndpoint() == null ||
 			keyProtectProperties.getBluemixOrgGuid() == null ||
@@ -195,15 +196,18 @@ public class KeyProtectUtil {
 	/*
 	 * encrypt some text using some key id and iv id stored in key protect
 	 */
-	public String encrypt(String keyId, String ivId, String plaintext) throws Exception {
+	public String encrypt(String keyId, String plaintext) throws Exception {
 		try {
 			final String key = getKey(keyId);
-			final String iv = getKey(ivId);
 			final MessageDigest md = MessageDigest.getInstance("SHA-256");
 			final byte[] keyBytes = md.digest(key.getBytes("UTF-8"));
-			final byte[] ivBytes = Base64.getDecoder().decode(iv);
 			
-			logger.info("Encrypting with key=" + keyId + ", iv=" + ivId + ", text=" + plaintext);
+			// use zero-byte IV (as we never use the same key twice) -- in practice you may
+			// want to store separate IV in key-protect but we will save on key storage here
+			final byte[] ivBytes = new byte[16];
+			Arrays.fill(ivBytes, (byte)0);
+			
+			logger.info("Encrypting with key=" + keyId + ", text=" + plaintext);
 		
 			final String encryptionAlgorithm = "AES/CBC/PKCS5Padding";
 			final IvParameterSpec ivParameterSpec = new IvParameterSpec(Arrays.copyOf(ivBytes, 16));
@@ -220,20 +224,78 @@ public class KeyProtectUtil {
 	}
 	
 	/*
+	 * Delete a key
+	 */
+	public void deleteKey(String keyId) throws ClientProtocolException, IOException, URISyntaxException {
+		if (keyProtectProperties.getApiEndpoint() == null ||
+				keyProtectProperties.getBluemixOrgGuid() == null ||
+				keyProtectProperties.getBluemixSpaceGuid() == null ||
+				keyProtectProperties.getOauthToken() == null) {
+			// can't create a key -- no credentials
+			logger.info("Not deleting key: missing keyprotect properties");
+			return;
+		}
+		
+		final URI uri = new URIBuilder()
+				.setScheme("https")
+				.setHost(keyProtectProperties.getApiEndpoint())
+				.setPath("/api/v2/secrets/" + keyId)
+				.build();
+				
+		logger.info("Calling: DELETE " + uri.toString());
+		final HttpDelete httpdelete = new HttpDelete(uri);
+		httpdelete.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + keyProtectProperties.getOauthToken());
+		httpdelete.addHeader("Bluemix-Space", keyProtectProperties.getBluemixSpaceGuid());
+		httpdelete.addHeader("Bluemix-Org", keyProtectProperties.getBluemixOrgGuid());
+		
+		final ResponseHandler<JsonObject> rh = new ResponseHandler<JsonObject>() {
+			@Override
+			public JsonObject handleResponse(
+					final HttpResponse response) throws IOException {
+				StatusLine statusLine = response.getStatusLine();
+				HttpEntity entity = response.getEntity();
+				if (statusLine.getStatusCode() >= 300) {
+					throw new HttpResponseException(
+							statusLine.getStatusCode(),
+							statusLine.getReasonPhrase());
+				}
+				if (entity == null) {
+					throw new ClientProtocolException("Response contains no content");
+				}
+				ContentType contentType = ContentType.getOrDefault(entity);
+				Charset charset = contentType.getCharset();
+				
+				logger.info("response: " + entity.toString());
+				Reader reader = new InputStreamReader(entity.getContent(), charset);
+				
+				final Gson gson = new Gson();
+				final JsonObject obj = gson.fromJson(reader, JsonObject.class);				
+				logger.info("response: " + obj.toString());
+			
+				return obj;
+			}
+		};
+		httpclient.execute(httpdelete, rh);	
+		
+	}
+	
+	/*
 	 * decrypt some text using a key id stored in key protect
 	 */
-	public String decrypt(String keyId, String ivId, String encryptedText) throws Exception {
+	public String decrypt(String keyId, String encryptedText) throws Exception {
 		try {
 			final String key = getKey(keyId);
-			final String iv = getKey(ivId);
 			
 			final MessageDigest md = MessageDigest.getInstance("SHA-256");
 			final byte[] keyBytes = md.digest(key.getBytes("UTF-8"));
-			final byte[] ivBytes = Base64.getDecoder().decode(iv);
 			
-			logger.info("Decrypting with key=" + keyId + ", iv=" + ivId + ", text=" + encryptedText);
+			// use zero-byte IV (as we never use the same key twice) -- in practice you may
+			// want to store separate IV in key-protect but we will save on key storage here
+			final byte[] ivBytes = new byte[16];
+			Arrays.fill(ivBytes, (byte)0);
+			
+			logger.info("Decrypting with key=" + keyId + ", text=" + encryptedText);
 			logger.info("key payload=" + key + ", key length=" + keyBytes.length);
-			logger.info("iv payload=" + iv + ", iv length=" + ivBytes.length);
 			
 			final String encryptionAlgorithm = "AES/CBC/PKCS5Padding";
 			final IvParameterSpec ivParameterSpec = new IvParameterSpec(Arrays.copyOf(ivBytes, 16));

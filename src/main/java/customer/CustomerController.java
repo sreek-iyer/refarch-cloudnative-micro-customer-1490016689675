@@ -191,11 +191,25 @@ public class CustomerController {
     
     
     private void encryptPayload(Customer payload) throws Exception {
-		payload.setPassword(keyProtect.encrypt(payload.getKeyId(), payload.getIvId(), payload.getPassword()));
+    	// never re-use keys
+    	if (payload.getKeyId() != null) {
+    		keyProtect.deleteKey(payload.getKeyId());
+    	}
+    	
+    	// get a new key
+    	final String newKeyId = keyProtect.createKey();
+		if (newKeyId == null) {
+			return;
+		}
+		
+		payload.setKeyId(newKeyId);
+		payload.setPassword(keyProtect.encrypt(newKeyId, payload.getPassword()));
     }
      
     private void decryptPayload(Customer payload) throws Exception {
-		payload.setPassword(keyProtect.decrypt(payload.getKeyId(), payload.getIvId(), payload.getPassword()));
+    	if (payload.getKeyId() != null) {
+			payload.setPassword(keyProtect.decrypt(payload.getKeyId(), payload.getPassword()));
+    	}
     }
 
     /**
@@ -225,7 +239,6 @@ public class CustomerController {
 			final String ivId = keyProtect.createKey();
 			
 			payload.setKeyId(keyId);
-			payload.setIvId(ivId);
 			
 			encryptPayload(payload);
             
@@ -305,7 +318,10 @@ public class CustomerController {
             final Database cloudant = getCloudantDatabase();
             final Customer cust = getCloudantDatabase().find(Customer.class, id);
             
-            // TODO: delete key
+            // delete key
+            if (cust.getKeyId() != null) {
+				keyProtect.deleteKey(cust.getKeyId());
+            }
 
             cloudant.remove(cust);
         } catch (NoDocumentException e) {
