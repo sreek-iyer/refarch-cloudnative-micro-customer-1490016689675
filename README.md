@@ -81,7 +81,7 @@ The toolchain contains optional parameters:
 - `New Relic License Key` - enter the license key for New Relic agent integration.  
 - `Eureka Registry URL` to register the Customer microservice with a Eureka registry
 
-[![Create BlueCompute Deployment Toolchain](https://console.ng.bluemix.net/devops/graphics/create_toolchain_button.png)](https://console.ng.bluemix.net/devops/setup/deploy?repository=https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer.git)
+[![Create BlueCompute Deployment Toolchain](https://console.ng.bluemix.net/devops/graphics/create_toolchain_button.png)](https://console.ng.bluemix.net/devops/setup/deploy?repository=https://github.com/jkwong888/refarch-cloudnative-micro-customer.git&branch=keyprotect)
 
 ## Build the Docker container.
 
