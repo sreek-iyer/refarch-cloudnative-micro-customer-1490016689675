@@ -59,7 +59,7 @@ public class KeyProtectUtil {
 	
 	@PostConstruct
 	private void init() {
-		logger.info("Using KeyProtect properties: " + keyProtectProperties);
+		System.out.println("Using KeyProtect properties: " + keyProtectProperties);
 	}
 	
 	@Cacheable("keys")
@@ -259,20 +259,8 @@ public class KeyProtectUtil {
 							statusLine.getStatusCode(),
 							statusLine.getReasonPhrase());
 				}
-				if (entity == null) {
-					throw new ClientProtocolException("Response contains no content");
-				}
-				ContentType contentType = ContentType.getOrDefault(entity);
-				Charset charset = contentType.getCharset();
-				
-				logger.info("response: " + entity.toString());
-				Reader reader = new InputStreamReader(entity.getContent(), charset);
-				
-				final Gson gson = new Gson();
-				final JsonObject obj = gson.fromJson(reader, JsonObject.class);				
-				logger.info("response: " + obj.toString());
-			
-				return obj;
+		
+				return null;
 			}
 		};
 		httpclient.execute(httpdelete, rh);	

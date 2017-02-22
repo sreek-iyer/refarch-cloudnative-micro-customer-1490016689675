@@ -234,12 +234,6 @@ public class CustomerController {
                 return ResponseEntity.badRequest().body("Customer with name " + payload.getUsername() + " already exists");
 			}
 			
-			// generate keys to encrypt the password
-			final String keyId = keyProtect.createKey();
-			final String ivId = keyProtect.createKey();
-			
-			payload.setKeyId(keyId);
-			
 			encryptPayload(payload);
             
             final Response resp = cloudant.save(payload);
