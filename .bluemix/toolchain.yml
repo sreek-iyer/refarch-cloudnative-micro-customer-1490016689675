@@ -36,7 +36,7 @@ pipeline-micro-customer:
        EUREKA_REGISTRY_URL: "{{deploy.parameters.eureka-url}}"
        NEW_RELIC_LICENSE: "{{deploy.parameters.new-relic-lic-key}}"
        IMAGE_NAME: "{{pipeline-micro-customer.parameters.name}}-{{deploy.parameters.deploy-space}}"
-      execute: false
+      execute: true
 
 deploy:
   schema: deploy.json
