@@ -80,6 +80,7 @@ Install the [Cloud Foundry CLI](https://console.ng.bluemix.net/docs/starters/ins
 You can use the following button to deploy the Customer microservice to Bluemix, or you can follow the instructions manually below.
 
 The deployment will:
+
 1. Discover and pass in the Cloudant credentials from the Cloudant instance in the space 
 2. Pass the Pipeline's OAuth token and org and space GUIDs as Key Protect parameters (**Note that the Pipeline OAuth token expires after approximately one day, this is a demonstration not intended for production use**)
 3. Provision a container group with the Customer Microservice in the Bluemix Container Service.  
