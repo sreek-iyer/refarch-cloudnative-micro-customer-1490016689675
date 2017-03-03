@@ -112,9 +112,6 @@ stages:
   - name: NEW_RELIC_LICENSE_KEY
     value: ${NEW_RELIC_LICENSE}
     type: text
-  - name: IGNORE_MAPPING_ROUTE
-    value: 'true'
-    type: text
   jobs:
   - name: Deploy Container
     type: deployer
@@ -188,7 +185,8 @@ stages:
               -e eureka.client.registerWithEureka=false \
               -e "eureka.client.serviceUrl.defaultZone=${EUREKA_REGISTRY_URL}""
         fi
-
+        
+        ROUTE_HOSTNAME=${NAME}
         
         # Deploy Container Group:
         # Optional environment properties (can be set directly in this script, or defined as environment properties):
