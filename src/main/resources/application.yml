@@ -2,6 +2,8 @@ eureka:
   instance:
      preferIpAddress: true
   client:
+    registerWithEureka: false
+    fetchRegistry: false
     serviceUrl:
        defaultZone: http://microservices-refapp-eureka-chrisking.mybluemix.net/eureka/
 
@@ -21,3 +23,10 @@ spring:
         host: 
         port: 443
         database: customers
+
+     keyprotect:
+        api-endpoint: ibm-key-protect.edge.bluemix.net
+        bluemix-space-guid: 
+        bluemix-org-guid: 
+        oauth-token: 
+        refresh-token: 

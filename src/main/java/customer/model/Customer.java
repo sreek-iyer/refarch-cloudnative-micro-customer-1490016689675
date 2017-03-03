@@ -1,6 +1,24 @@
 package customer.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class Customer {
+	
+	@JsonIgnore
+	public String getKeyId() {
+		return keyId;
+	}
+	public void setKeyId(String keyId) {
+		this.keyId = keyId;
+	}
+	@JsonIgnore
+	public String getIvId() {
+		return ivId;
+	}
+	public void setIvId(String ivId) {
+		this.ivId = ivId;
+	}
+
 	private String _id;
     
     private String _rev;
@@ -12,6 +30,9 @@ public class Customer {
 	private String lastName;
 	private String email;
 	private String imageUrl;
+	
+	private String keyId;
+	private String ivId;
 	
 	public String getCustomerId() {
 		return _id;
