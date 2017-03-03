@@ -10,7 +10,7 @@ This project demonstrates how to build a Microservices application implemented a
 - Deploy the Customer microservice as a container on the [IBM Bluemix Container Service](https://console.ng.bluemix.net/docs/containers/container_index.html).
 - Register the container with Eureka service registry (part of [Spring Cloud Netflix project](http://cloud.spring.io/spring-cloud-netflix/)
 - Persist Customer data in an [IBM Cloudant](https://console.ng.bluemix.net/docs/services/Cloudant/index.html#Cloudant) NoSQL database using the official [Cloudant Java library](https://github.com/cloudant/java-cloudant).
-- Generate and retrieve keys from [IBM Key Protect](https://console.ng.bluemix.net/catalog/services/key-protect/)
+- Generate and retrieve keys from [IBM Key Protect](https://console.ng.bluemix.net/catalog/services/key-protect/) to AES encrypt the password fields in the database.
 
 ![Customer Microservice](customer_microservice.png)
 
@@ -82,8 +82,8 @@ You can use the following button to deploy the Customer microservice to Bluemix,
 The deployment will:
 1. Discover and pass in the Cloudant credentials from the Cloudant instance in the space 
 2. Pass the Pipeline's OAuth token and org and space GUIDs as Key Protect parameters (**Note that the Pipeline OAuth token expires after approximately one day, this is a demonstration not intended for production use**)
-2. Provision a container group with the Customer Microservice in the Bluemix Container Service.  
-3. Once the container group has been created, a temporary route is mapped to the container group, a user with the username 'foo' and password 'bar' is inserted into the database, and temporary route is removed.
+3. Provision a container group with the Customer Microservice in the Bluemix Container Service.  
+4. Once the container group has been created, a user with the username 'foo' and password 'bar' is inserted into the database.
 
 The toolchain contains optional parameters:
 - `New Relic License Key` - enter the license key for New Relic agent integration.  
@@ -244,7 +244,6 @@ Verify the customer.  The caller must pass a header, `IBM-App-User`, to the API,
 ```
 
 Note that *only* the customer object identified by `IBM-App-User` is returned to the caller.
-
 
 ### Search Customer by username
 
