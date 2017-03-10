@@ -34,7 +34,6 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
 import customer.config.CloudantPropertiesBean;
 import customer.model.Customer;
-import customer.util.KeyProtectUtil;
 
 /**
  * REST Controller to manage Customer database
@@ -48,9 +47,6 @@ public class CustomerController {
     
     @Autowired
     private CloudantPropertiesBean cloudantProperties;
-    
-    @Autowired
-    private KeyProtectUtil keyProtect;
     
     @PostConstruct
     private void init() throws MalformedURLException {
@@ -115,11 +111,7 @@ public class CustomerController {
         	final List<Customer> customers = getCloudantDatabase().findByIndex(
         			"{ \"selector\": { \"username\": \"" + username + "\" } }", 
         			Customer.class);
-        	
-        	for (final Customer cust : customers) {
-				decryptPayload(cust);
-        	}
-        	
+       	
         	//  query index
             return  ResponseEntity.ok(customers);
             
@@ -148,8 +140,6 @@ public class CustomerController {
         	logger.info("caller: " + customerId);
 			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
             
-			decryptPayload(cust);
-			
             return ResponseEntity.ok(cust);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -178,8 +168,6 @@ public class CustomerController {
         	}
         	
 			final Customer cust = getCloudantDatabase().find(Customer.class, customerId);
-			decryptPayload(cust);
-            
             return ResponseEntity.ok(cust);
         } catch (NoDocumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Customer with ID " + id + " not found");
@@ -189,35 +177,6 @@ public class CustomerController {
         }
     }
     
-    
-    private void encryptPayload(Customer payload) throws Exception {
-    	// never re-use keys
-    	if (payload.getKeyId() != null) {
-    		keyProtect.deleteKey(payload.getKeyId());
-    	}
-    	
-    	// get a new key
-    	final String newKeyId = keyProtect.createKey();
-		if (newKeyId == null) {
-			return;
-		}
-		
-		payload.setKeyId(newKeyId);
-		payload.setFirstName(keyProtect.encrypt(newKeyId, payload.getFirstName()));
-		payload.setLastName(keyProtect.encrypt(newKeyId, payload.getLastName()));
-		payload.setEmail(keyProtect.encrypt(newKeyId, payload.getEmail()));
-		payload.setImageUrl(keyProtect.encrypt(newKeyId, payload.getImageUrl()));
-    }
-     
-    private void decryptPayload(Customer payload) throws Exception {
-    	if (payload.getKeyId() != null) {
-			payload.setFirstName(keyProtect.decrypt(payload.getKeyId(), payload.getFirstName()));
-			payload.setLastName(keyProtect.decrypt(payload.getKeyId(), payload.getLastName()));
-			payload.setEmail(keyProtect.decrypt(payload.getKeyId(), payload.getEmail()));
-			payload.setImageUrl(keyProtect.decrypt(payload.getKeyId(), payload.getImageUrl()));
-    	}
-    }
-
     /**
      * Add customer 
      * @return transaction status
@@ -239,9 +198,7 @@ public class CustomerController {
 			if (!customers.isEmpty()) {
                 return ResponseEntity.badRequest().body("Customer with name " + payload.getUsername() + " already exists");
 			}
-			
-			encryptPayload(payload);
-            
+           
             final Response resp = cloudant.save(payload);
             
             if (resp.getError() == null) {
@@ -288,9 +245,7 @@ public class CustomerController {
             cust.setLastName(payload.getLastName());
             cust.setImageUrl(payload.getImageUrl());
             cust.setEmail(payload.getEmail());
-            
-			encryptPayload(cust);
-            
+           
             cloudant.save(payload);
         } catch (NoDocumentException e) {
             logger.error("Customer not found: " + id);
@@ -315,11 +270,6 @@ public class CustomerController {
             final Database cloudant = getCloudantDatabase();
             final Customer cust = getCloudantDatabase().find(Customer.class, id);
             
-            // delete key
-            if (cust.getKeyId() != null) {
-				keyProtect.deleteKey(cust.getKeyId());
-            }
-
             cloudant.remove(cust);
         } catch (NoDocumentException e) {
             logger.error("Customer not found: " + id);
