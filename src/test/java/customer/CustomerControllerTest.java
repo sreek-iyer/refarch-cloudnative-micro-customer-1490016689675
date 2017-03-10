@@ -1,7 +1,5 @@
 package customer;
 
-import java.util.Random;
-
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,7 +24,6 @@ public class CustomerControllerTest {
 		inv.setFirstName("Name");
 		inv.setLastName("Last");
 		inv.setUsername("user1");
-		inv.setPassword("asdf");
 		inv.setEmail("my@email.com");
 		inv.setImageUrl("/image/myimage.jpg");
 		
@@ -44,7 +41,6 @@ public class CustomerControllerTest {
 		myJsonStr.append("\"lastName\":").append("\"Last\"").append(",");
 		myJsonStr.append("\"imageUrl\":").append("\"/image/myimage.jpg\"").append(",");
 		myJsonStr.append("\"username\":").append("\"user1\"").append(",");
-		myJsonStr.append("\"password\":").append("\"asdf\"");
 		myJsonStr.append("}");
 		
 		final String myJson = myJsonStr.toString();
@@ -75,7 +71,6 @@ public class CustomerControllerTest {
 		myJsonStr.append("\"lastName\":").append("\"Smith\"").append(",");
 		myJsonStr.append("\"imageUrl\":").append("\"/image/myimage.jpg\"").append(",");
 		myJsonStr.append("\"username\":").append("\"user1\"").append(",");
-		myJsonStr.append("\"password\":").append("\"asdf\"");
 		myJsonStr.append("}");
 		
 		final String myJson = myJsonStr.toString();
@@ -91,7 +86,6 @@ public class CustomerControllerTest {
 		assert(inv.getLastName().equals("Smith"));
 		assert(inv.getImageUrl().equals("/image/myimage.jpg"));
 		assert(inv.getUsername().equals("user1"));
-		assert(inv.getPassword().equals("asdf"));
 		assert(inv.getEmail().equals("my@email.com"));
 		
 		

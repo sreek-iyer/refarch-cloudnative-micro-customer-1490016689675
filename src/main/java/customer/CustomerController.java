@@ -203,12 +203,18 @@ public class CustomerController {
 		}
 		
 		payload.setKeyId(newKeyId);
-		payload.setPassword(keyProtect.encrypt(newKeyId, payload.getPassword()));
+		payload.setFirstName(keyProtect.encrypt(newKeyId, payload.getFirstName()));
+		payload.setLastName(keyProtect.encrypt(newKeyId, payload.getLastName()));
+		payload.setEmail(keyProtect.encrypt(newKeyId, payload.getEmail()));
+		payload.setImageUrl(keyProtect.encrypt(newKeyId, payload.getImageUrl()));
     }
      
     private void decryptPayload(Customer payload) throws Exception {
     	if (payload.getKeyId() != null) {
-			payload.setPassword(keyProtect.decrypt(payload.getKeyId(), payload.getPassword()));
+			payload.setFirstName(keyProtect.decrypt(payload.getKeyId(), payload.getFirstName()));
+			payload.setLastName(keyProtect.decrypt(payload.getKeyId(), payload.getLastName()));
+			payload.setEmail(keyProtect.decrypt(payload.getKeyId(), payload.getEmail()));
+			payload.setImageUrl(keyProtect.decrypt(payload.getKeyId(), payload.getImageUrl()));
     	}
     }
 
@@ -277,16 +283,13 @@ public class CustomerController {
             final Database cloudant = getCloudantDatabase();
             final Customer cust = getCloudantDatabase().find(Customer.class, id);
     
+            cust.setUsername(payload.getUsername());
             cust.setFirstName(payload.getFirstName());
             cust.setLastName(payload.getLastName());
             cust.setImageUrl(payload.getImageUrl());
             cust.setEmail(payload.getEmail());
             
-            if (payload.getPassword() != null) {
-            	// encrypt password if it's passed in
-				cust.setPassword(payload.getPassword());
-				encryptPayload(cust);
-            }
+			encryptPayload(cust);
             
             cloudant.save(payload);
         } catch (NoDocumentException e) {
