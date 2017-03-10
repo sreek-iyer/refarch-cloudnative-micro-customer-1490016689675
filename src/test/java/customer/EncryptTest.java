@@ -2,17 +2,13 @@ package customer;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import customer.model.Customer;
 import customer.util.EncryptUtil;
 
 
 public class EncryptTest {
 	
 	
-	@Test
+//	@Test
 	public void testEncrypt() throws Exception {
 		final String plaintext = "abcdefgh";
 		final String testKey = "+rHvI/C6AXVkBgqal+okun5IqECz1RjrsJNEOm7o5x8=";
