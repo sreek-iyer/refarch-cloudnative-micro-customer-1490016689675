@@ -3,4 +3,6 @@ build/
 .gradle/
 .project
 .settings
-
+.classpath
+*.swp
+*.swo
