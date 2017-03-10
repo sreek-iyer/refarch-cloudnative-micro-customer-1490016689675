@@ -199,24 +199,7 @@ public class KeyProtectUtil {
 	public String encrypt(String keyId, String plaintext) throws Exception {
 		try {
 			final String key = getKey(keyId);
-			final MessageDigest md = MessageDigest.getInstance("SHA-256");
-			final byte[] keyBytes = md.digest(key.getBytes("UTF-8"));
-			
-			// use zero-byte IV (as we never use the same key twice) -- in practice you may
-			// want to store separate IV in key-protect but we will save on key storage here
-			final byte[] ivBytes = new byte[16];
-			Arrays.fill(ivBytes, (byte)0);
-			
-			logger.info("Encrypting with key=" + keyId + ", text=" + plaintext);
-		
-			final String encryptionAlgorithm = "AES/CBC/PKCS5Padding";
-			final IvParameterSpec ivParameterSpec = new IvParameterSpec(Arrays.copyOf(ivBytes, 16));
-			final SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
-			final Cipher cipher = Cipher.getInstance(encryptionAlgorithm);
-			cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParameterSpec);
-			
-			final byte[] encrypted = cipher.doFinal(plaintext.getBytes("UTF-8"));
-			return Base64.getEncoder().encodeToString(encrypted);
+			return EncryptUtil.encrypt(key, plaintext);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			throw e;
@@ -274,27 +257,7 @@ public class KeyProtectUtil {
 		try {
 			final String key = getKey(keyId);
 			
-			final MessageDigest md = MessageDigest.getInstance("SHA-256");
-			final byte[] keyBytes = md.digest(key.getBytes("UTF-8"));
-			
-			// use zero-byte IV (as we never use the same key twice) -- in practice you may
-			// want to store separate IV in key-protect but we will save on key storage here
-			final byte[] ivBytes = new byte[16];
-			Arrays.fill(ivBytes, (byte)0);
-			
-			logger.info("Decrypting with key=" + keyId + ", text=" + encryptedText);
-			logger.info("key payload=" + key + ", key length=" + keyBytes.length);
-			
-			final String encryptionAlgorithm = "AES/CBC/PKCS5Padding";
-			final IvParameterSpec ivParameterSpec = new IvParameterSpec(Arrays.copyOf(ivBytes, 16));
-			final SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
-			final Cipher cipher = Cipher.getInstance(encryptionAlgorithm);
-			cipher.init(Cipher.DECRYPT_MODE, keySpec, ivParameterSpec);
-			
-			final byte[] byteArr = Base64.getDecoder().decode(encryptedText);
-			final byte[] original = cipher.doFinal(byteArr);
-			
-			return new String(original);
+			return EncryptUtil.decrypt(key, encryptedText);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			throw e;

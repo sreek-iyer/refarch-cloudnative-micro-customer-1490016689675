@@ -6,52 +6,27 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import customer.model.Customer;
+import customer.util.EncryptUtil;
 
 
-public class CustomerControllerTest {
+public class EncryptTest {
 	
 	
 	@Test
-	public void testMarshalToJson() throws Exception {
-		final Customer inv = new Customer();
+	public void testEncrypt() throws Exception {
+		final String plaintext = "abcdefgh";
+		final String testKey = "+rHvI/C6AXVkBgqal+okun5IqECz1RjrsJNEOm7o5x8=";
 		
-		final String id = "abcdefgh";
+		final String encrypted = EncryptUtil.encrypt(testKey, plaintext);
 		
-		final ObjectMapper mapper = new ObjectMapper();
+		System.out.println("encrypted: " + encrypted);
 		
+		final String decrypted = EncryptUtil.decrypt(testKey, encrypted);
 		
-		inv.setCustomerId(id);
-		inv.setFirstName("Name");
-		inv.setLastName("Last");
-		inv.setUsername("user1");
-		inv.setEmail("my@email.com");
-		inv.setImageUrl("/image/myimage.jpg");
+		System.out.println("decrypted: " + decrypted);
 		
+		assert(plaintext.equals(decrypted));
 		
-		final String json = mapper.writeValueAsString(inv);
-		
-		// construct a json string with the above properties
-		
-		final StringBuilder myJsonStr = new StringBuilder();
-		
-		myJsonStr.append("{");
-		myJsonStr.append("\"customerId\":\"").append(id).append("\",");
-		myJsonStr.append("\"email\":").append("\"my@email.com\"").append(",");
-		myJsonStr.append("\"firstName\":").append("\"Name\"").append(",");
-		myJsonStr.append("\"lastName\":").append("\"Last\"").append(",");
-		myJsonStr.append("\"imageUrl\":").append("\"/image/myimage.jpg\"").append(",");
-		myJsonStr.append("\"username\":").append("\"user1\"").append(",");
-		myJsonStr.append("}");
-		
-		final String myJson = myJsonStr.toString();
-		System.out.println("Marshalled Customer to JSON:" + myJson);
-		System.out.println("My JSON String:" + myJson);
-		
-		final JsonNode jsonObj = mapper.readTree(json);
-		final JsonNode myJsonObj = mapper.readTree(myJson);
-		
-		
-		assert(jsonObj.equals(myJsonObj));
 	}
 	
 	@Test
