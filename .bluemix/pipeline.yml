@@ -85,6 +85,24 @@ stages:
       # Copy any artifacts that will be needed for deployment and testing to $WORKSPACE    #
       ######################################################################################
       echo "IMAGE_NAME=${FULL_REPOSITORY_NAME}" >> $ARCHIVE_DIR/build.properties
+- name: SCAN
+  inputs:
+  - type: job
+    stage: BUILD
+    job: Build
+    dir_name: null
+  triggers:
+  - type: stage
+  jobs:
+  - name: Scan Image
+    type: tester
+    fail_stage: false
+    extension_id: ibm.devops.services.pipeline.crawler.tester
+    target:
+      region_id: ${REGION}
+      organization: ${ORG}
+      space: ${SPACE}
+    WAIT_TIME: '10'
 - name: DEPLOY
   inputs:
   - type: job
@@ -111,9 +129,6 @@ stages:
     type: text
   - name: NEW_RELIC_LICENSE_KEY
     value: ${NEW_RELIC_LICENSE}
-    type: text
-  - name: IGNORE_MAPPING_ROUTE
-    value: 'true'
     type: text
   jobs:
   - name: Deploy Container
@@ -188,7 +203,8 @@ stages:
               -e eureka.client.registerWithEureka=false \
               -e "eureka.client.serviceUrl.defaultZone=${EUREKA_REGISTRY_URL}""
         fi
-
+        
+        ROUTE_HOSTNAME=${NAME}
         
         # Deploy Container Group:
         # Optional environment properties (can be set directly in this script, or defined as environment properties):

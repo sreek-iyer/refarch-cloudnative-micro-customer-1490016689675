@@ -8,8 +8,8 @@ required:
 git-micro-customer:
   service_id: githubpublic
   parameters:
-    repo_name: "refarch-cloudnative-micro-customer-{{name}}"
-    repo_url: "https://github.com/ibm-cloud-architecture/refarch-cloudnative-micro-customer"
+    repo_name: "{{name}}"
+    repo_url: "https://github.com/jkwong888/refarch-cloudnative-micro-customer"
     type: clone
     has_issues: true
 
@@ -36,7 +36,7 @@ pipeline-micro-customer:
        EUREKA_REGISTRY_URL: "{{deploy.parameters.eureka-url}}"
        NEW_RELIC_LICENSE: "{{deploy.parameters.new-relic-lic-key}}"
        IMAGE_NAME: "{{pipeline-micro-customer.parameters.name}}-{{deploy.parameters.deploy-space}}"
-      execute: false
+      execute: true
 
 deploy:
   schema: deploy.json
@@ -45,5 +45,5 @@ deploy:
     deploy-region: "{{region}}"
     deploy-org: "{{organization}}"
     deploy-space: "{{space}}"
-    eureka-url: "https://<eureka-hostname>/eureka/"
+    eureka-url: ""
     new-relic-lic-key: ""
