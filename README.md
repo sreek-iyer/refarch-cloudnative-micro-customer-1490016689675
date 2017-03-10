@@ -222,7 +222,7 @@ Execute the following to run the Docker container locally.  Make sure to update 
 Create a customer profile for the user `foo` with the password `bar`.  Make sure that you replace `<temp-routename>` with your temporary route.
 
 ```
-# curl -X POST -H "Content-Type: application/json" -d '{"username": "foo", "password": "bar", "firstName": "foo", "lastName": "bar", "email": "foo@bar.com"}' -i https://<route-name>/micro/customer
+# curl -X POST -H "Content-Type: application/json" -d '{"username": "foo", "firstName": "foo", "lastName": "bar", "email": "foo@bar.com"}' -i https://<route-name>/micro/customer
 HTTP/1.1 201 Created
 X-Backside-Transport: OK OK
 Connection: Keep-Alive
@@ -241,7 +241,7 @@ Verify the customer.  The caller must pass a header, `IBM-App-User`, to the API,
 
 ```
 # curl -H "IBM-App-User: bff5631f24c849e8897645be8b66af16"  http://<route-name>/micro/customer
-{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","imageUrl":null,"customerId":"bff5631f24c849e8897645be8b66af16","email":"foo@bar.com"}
+{"username":"foo","firstName":"foo","lastName":"bar","imageUrl":null,"customerId":"bff5631f24c849e8897645be8b66af16","email":"foo@bar.com"}
 ```
 
 Note that *only* the customer object identified by `IBM-App-User` is returned to the caller.
@@ -252,7 +252,7 @@ Call the `search` API to find the customer by username.  This API is used by the
 
 ```
 # curl http://<route-name>/micro/customer/search?username=foo
-[{"username":"foo","password":"bar","firstName":"foo","lastName":"bar","imageUrl":null,"customerId":"bff5631f24c849e8897645be8b66af16","email":"foo@bar.com"}]
+[{"username":"foo","firstName":"foo","lastName":"bar","imageUrl":null,"customerId":"bff5631f24c849e8897645be8b66af16","email":"foo@bar.com"}]
 ```
 
 ### Validate data is encrypted
